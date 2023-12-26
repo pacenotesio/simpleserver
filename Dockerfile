@@ -1,9 +1,13 @@
-# Container image that runs your code
-FROM alpine:3.10
+FROM golang:1.21
 
-# Copies your code file from your action repository to the filesystem path `/` of the container
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod 755 /entrypoint.sh
+WORKDIR /usr/src/app
+RUN git clone --single-branch -b develop https://github.com/pacenotesio/simpleserver.git .
 
-# Code file to execute when the docker container starts up (`entrypoint.sh`)
-ENTRYPOINT ["/entrypoint.sh"]
+# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+#COPY go.mod go.sum ./
+#RUN go mod download && go mod verify
+
+#COPY . .
+RUN go build -v -o /usr/local/bin/app ./server.go
+
+CMD ["app"]
