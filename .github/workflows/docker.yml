@@ -39,8 +39,8 @@ jobs:
         run: |
           CURRENT_TAG=${GITHUB_REF#refs/tags/}
           echo ::set-output name=CURRENT_TAG::${CURRENT_TAG}
-          echo ::set-output name=RUBY_VERSION::${CURRENT_TAG%-*}
-          echo ::set-output name=BUNDLER_VERSION::${CURRENT_TAG##*-}
+          echo ::set-output name=ARCHITECTURE_VERSION::${CURRENT_TAG%-*}
+          echo ::set-output name=BUILD_NO::${CURRENT_TAG##*-}
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
@@ -58,8 +58,8 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           build-args: |
-            RUBY_VERSION=${{ steps.prepare_build_arg.outputs.RUBY_VERSION }}
-            BUNDLER_VERSION=${{ steps.prepare_build_arg.outputs.BUNDLER_VERSION }}
+            ARCHITECTURE_VERSION=${{ steps.prepare_build_arg.outputs.ARCHITECTURE_VERSION }}
+            BUILD_NO=${{ steps.prepare_build_arg.outputs.BUILD_NO }}
 
 #      - name: Login to GitHub Container Registry
 #        uses: docker/login-action@v1
@@ -79,8 +79,8 @@ jobs:
 #          cache-from: type=local,src=/tmp/.buildx-cache
 #          cache-to: type=local,dest=/tmp/.buildx-cache-new
 #          build-args: |
-#            RUBY_VERSION=${{ steps.prepare_build_arg.outputs.RUBY_VERSION }}
-#            BUNDLER_VERSION=${{ steps.prepare_build_arg.outputs.BUNDLER_VERSION }}
+#            ARCHITECTURE_VERSION=${{ steps.prepare_build_arg.outputs.ARCHITECTURE_VERSION }}
+#            BUILD_NO=${{ steps.prepare_build_arg.outputs.BUILD_NO }}
 
       - name: Move cache
         run: |
