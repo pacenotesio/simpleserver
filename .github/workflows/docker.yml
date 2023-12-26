@@ -7,7 +7,7 @@
 # 新しいバージョンを取得するには、SHA を更新する必要があります。
 # タグまたはブランチを参照することもできますが、アクションは警告なしに変更される可能性があります。
 
-name: Publish Docker image
+name: Publish Docker image (full feature)
 
 on: [push]
 #on:
