@@ -7,13 +7,13 @@
 # 新しいバージョンを取得するには、SHA を更新する必要があります。
 # タグまたはブランチを参照することもできますが、アクションは警告なしに変更される可能性があります。
 
-name: Publish Docker image (full feature)
+name: Publish Docker image (tag trigger)
 
-on: [push]
-#on:
-#  push:
-#    tags:
-#      - '*'
+#on: [push]
+on:
+  push:
+    tags:
+      - '*'
 
 jobs:
   push_to_registry:
