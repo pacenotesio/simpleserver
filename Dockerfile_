@@ -1,0 +1,137 @@
+#
+#
+# Build image
+#
+#
+FROM ubuntu:22.04 as core
+
+#
+# process is in work directory
+#
+WORKDIR /work
+
+#
+# Install nodejs and other basic modules
+#
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      build-essential \
+      apt-utils \
+      wget \
+      curl \
+      unzip \
+      git \
+      python3-pip \
+      python-setuptools \
+      gridsite-clients \
+      sqlite3 \
+      golang-go \
+#      pkg-config \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# install golang
+# RUN apt-get install -y golang-go
+#RUN apt-get update && apt-get upgrade -y && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata unzip git curl wget && apt-get clean
+#RUN wget https://dl.google.com/go/go1.18.3.linux-amd64.tar.gz && tar -xvf go1.18.3.linux-amd64.tar.gz  && mv go /usr/local && apt-get clean
+#RUN export GOROOT=/usr/local/go
+#RUN export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+# Setup core
+WORKDIR /app
+RUN git clone --single-branch -b develop https://github.com/pacenotesio/simpleserver.git .
+WORKDIR /app
+#RUN apt-get --allow-releaseinfo-change update && apt upgrade -y
+#RUN /usr/local/go/bin/go env -w GO111MODULE=auto \
+# && /usr/local/go/bin/go get github.com/gin-gonic/gin \
+# && /usr/local/go/bin/go get github.com/gin-contrib/cors \
+# && /usr/local/go/bin/go get github.com/gin-gonic/autotls \
+# && /usr/local/go/bin/go get golang.org/x/crypto/acme/autocert \
+# && /usr/local/go/bin/go get github.com/unrolled/secure \
+# && /usr/local/go/bin/go get github.com/mattn/go-sqlite3 \
+# && /usr/local/go/bin/go get github.com/go-sql-driver/mysql \
+# && /usr/local/go/bin/go get xorm.io/xorm \
+# && /usr/local/go/bin/go get go.uber.org/zap \
+# && /usr/local/go/bin/go get github.com/lestrrat-go/file-rotatelogs \
+# && /usr/local/go/bin/go get github.com/spiegel-im-spiegel/logf \
+# && /usr/local/go/bin/go get github.com/mattn/go-shellwords \
+# && /usr/local/go/bin/go get github.com/gin-contrib/sessions \
+# && /usr/local/go/bin/go get github.com/mattn/go-shellwords \
+# && /usr/local/go/bin/go get github.com/gyuho/linux-inspect/df \
+# && /usr/local/go/bin/go get github.com/gyuho/linux-inspect/top \
+# && /usr/local/go/bin/go get github.com/360EntSecGroup-Skylar/excelize
+
+RUN /usr/local/go/bin/go build -o server-arm64 server.go
+
+
+#
+#
+# Production image
+#
+#
+FROM ubuntu:22.04
+
+#
+# process is in work directory
+#
+WORKDIR /work
+
+#
+# Install nodejs and other basic modules
+#
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      build-essential \
+      apt-utils \
+      wget \
+      curl \
+      unzip \
+      git \
+      python3-pip \
+      python-setuptools \
+      sqlite3 \
+      imagemagick \
+      golang-go \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+#RUN sudo apt install -y golang-go
+
+# install Japanese fonts
+#COPY docker/ipaexg.ttf /work
+#COPY docker/ipaexm.ttf /work
+
+# Cron-task file
+#COPY docker/crontask /etc/cron.d/crontask
+#RUN chmod 0644 /etc/cron.d/crontask \
+# && apt-get clean && apt-get update \
+#    && apt-get install -y --no-install-recommends cron \
+#    && rm -rf /var/lib/apt/lists/* \
+#    && echo > /tmp/wget.log
+
+WORKDIR /app
+RUN mkdir -p /app/core \
+ && mkdir /app/core/logs \
+ && mkdir /app/core/uploads \
+ && mkdir /app/core/mosquitto \
+ && mkdir /app/core/mosquitto/config \
+ && mkdir /app/core/mosquitto/data \
+ && mkdir /app/core/mosquitto/log \
+ && mkdir /app/core/shell \
+ && mkdir /app/core/shell/ai
+COPY --from=core /app/main-arm64 /app/core
+
+#COPY --from=core /app/cert /app/core/cert
+#COPY --from=core /app/conf /app/core/conf
+#COPY --from=core /app/core/data /app/core/data
+#COPY --from=core /app/core/shell /app/core/shell
+#COPY --from=core /app/core/db /app/core/db
+#COPY --from=core /app/core/htdocs /app/core/htdocs
+#COPY --from=core /app/core/tmp /app/core/tmp
+#COPY --from=core /app/core/uploads /app/core/uploads
+#COPY docker/config.json /app/core/conf
+##COPY docker/policy.xml /etc/ImageMagick-6
+
+WORKDIR /app/core
+CMD cd /app/core 
+CMD ./main-arm64

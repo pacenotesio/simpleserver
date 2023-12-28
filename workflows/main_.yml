@@ -1,0 +1,13 @@
+on: [push]
+
+ jobs:
+   test:
+     name: Hello world
+     runs-on: ubuntu-latest
+         steps:
+             - uses: actions/github-script@v6
+             - name: Write a comment
+               with:
+                 script: |
+                     ### Hello World!
+                     ### Test message!

@@ -1,0 +1,112 @@
+# このワークフローはGitHubによって認定されていないアクションを使用します。
+# それらはサードパーティによって提供され、
+# 別個の利用規約、プライバシーポリシー、
+# ドキュメントを参照してください。
+
+# GitHub では、コミット SHA にアクションをピン留めすることが推奨されます。
+# 新しいバージョンを取得するには、SHA を更新する必要があります。
+# タグまたはブランチを参照することもできますが、アクションは警告なしに変更される可能性があります。
+
+name: Publish Docker image (docker build)
+
+on: [push]
+#on:
+#  push:
+#    tags:
+#      - '*'
+
+env:
+  IMAGE_NAME: ${{ github.repository }}
+  VERSION: ${{ secrets.BUILD_VERSION }}-${{ github.ref_name }}
+
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+    # see: https://github.com/docker/metadata-action
+#            type=raw,value=${{ secrets.BUILD_VERSION }}-${{ github.ref_name }}
+#            type=ref,event=branch
+#            type=sha
+#            type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ env.VERSION }}
+            type=raw,value=latest
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: |
+            org.opencontainers.image.title=simple-server
+            org.opencontainers.image.vendor="Synon,Inc."
+            org.opencontainers.image.licenses=BSD-3.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+#      - name: Generate build number
+#        uses: onyxmueller/build-tag-number@v1
+#        with:
+#          token: ${{secrets.github_token}}        
+#      - name: Print new build number
+#        run: echo "Build number is $BUILD_NUMBER"
+#        # Or, if you're on Windows: echo "Build number is ${env:BUILD_NUMBER}"
+
+#      - name: Prepare Build Arg
+#        id: prepare_build_arg
+#        run: |
+#          CURRENT_TAG=${GITHUB_REF#refs/tags/}
+#          echo ::set-output name=CURRENT_TAG::${CURRENT_TAG}
+#          echo ::set-output name=CURRENT_VERSION::${CURRENT_TAG%-*}
+#          echo ::set-output name=BUILD_NO::${CURRENT_TAG##*-}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # see also https://github.com/docker/metadata-action
+      - name: Build and push
+        id: build-and-push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          build-args: |
+            BUILD_NO=${{ github.run_number }}
+#            CURRENT_TAG=${{ steps.prepare_build_arg.outputs.CURRENT_TAG }}
+#            CURRENT_VERSION=${{ steps.prepare_build_arg.outputs.CURRENT_VERSION }}
+#            BUILD_NO=${{ steps.prepare_build_arg.outputs.BUILD_NO }}
+        
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+
+
+
