@@ -38,6 +38,10 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=sha
+            type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
           labels: |
             org.opencontainers.image.title=simple-server
             org.opencontainers.image.vendor="Synon,Inc."
