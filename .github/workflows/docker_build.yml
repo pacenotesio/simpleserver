@@ -17,6 +17,7 @@ on: [push]
 
 env:
   IMAGE_NAME: ${{ github.repository }}
+  VERSION: ${{ secrets.BUILD_VERSION }}-${{ github.ref_name }}
 
 
 jobs:
@@ -25,18 +26,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show github properties
-        run: | 
-          echo ${{ github.workflow }}
-          echo ${{ github.ref }}
-          echo ${{ github.sha }}
-      - name: Show secret properties
-        run: | 
-          echo ${{ secrets.BUILD_VERSION }}
-      - name: Show inputs properties
-        run: |
-          echo ${{ github.event.inputs.comment }}
-
       - name: Check out the repo
         uses: actions/checkout@v2
 
@@ -51,7 +40,7 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ secrets.BUILD_VERSION }}
+            type=raw,value=${{ env.VERSION }}
             type=raw,value=latest
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
