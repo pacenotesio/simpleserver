@@ -15,6 +15,7 @@ on: [push]
 #    tags:
 #      - '*'
 
+
 env:
   IMAGE_NAME: ${{ github.repository }}
   VERSION: ${{ secrets.BUILD_VERSION }}-${{ github.ref_name }}
