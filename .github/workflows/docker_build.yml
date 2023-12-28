@@ -25,10 +25,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Show github properties
+        run: | 
+          echo ${{ github.workflow }}
+          echo ${{ github.ref }}
+          echo ${{ github.sha }}
+      - name: Show secret properties
+        run: | 
+          echo ${{ secrets.BUILD_VERSION }}
+      - name: Show inputs properties
+        run: |
+          echo ${{ github.event.inputs.comment }}
+
       - name: Check out the repo
         uses: actions/checkout@v2
 
     # see: https://github.com/docker/metadata-action
+#            type=ref,event=branch
 #            type=sha
 #            type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
       - name: Extract metadata (tags, labels) for Docker
@@ -37,9 +50,8 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ secrets.BUILD_VERSION }}
+            type=raw,value=${{ secrets.BUILD_VERSION }}-${{ github.ref_name }}
             type=raw,value=latest
-            type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -94,7 +106,8 @@ jobs:
 
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-#          build-args: |
+          build-args: |
+            BUILD_NO=${{ github.run_number }}
 #            CURRENT_TAG=${{ steps.prepare_build_arg.outputs.CURRENT_TAG }}
 #            CURRENT_VERSION=${{ steps.prepare_build_arg.outputs.CURRENT_VERSION }}
 #            BUILD_NO=${{ steps.prepare_build_arg.outputs.BUILD_NO }}
