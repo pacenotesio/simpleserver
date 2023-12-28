@@ -29,6 +29,8 @@ jobs:
         uses: actions/checkout@v2
 
     # see: https://github.com/docker/metadata-action
+#            type=sha
+#            type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
@@ -37,8 +39,6 @@ jobs:
           tags: |
             type=raw,value=${{ secrets.BUILD_VERSION }}
             type=ref,event=branch
-#            type=sha
-            type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
