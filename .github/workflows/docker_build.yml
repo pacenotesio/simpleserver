@@ -42,7 +42,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
-            type=sha
+#            type=sha
           labels: |
             org.opencontainers.image.title=simple-server
             org.opencontainers.image.vendor="Synon,Inc."
