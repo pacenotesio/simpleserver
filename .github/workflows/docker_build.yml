@@ -23,8 +23,6 @@ jobs:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
 
-
-
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -37,8 +35,8 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
 #          tags: ${{ env.IMAGE_NAME }}:1.0
           tags: |
+            type=raw,value=${{ secrets.BUILD_VERSION }}
             type=ref,event=branch
-            type=semver,pattern={{version}}
             type=sha
             type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
             type=semver,pattern={{version}}
