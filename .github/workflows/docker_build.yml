@@ -34,7 +34,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.IMAGE_NAME }}
-#          tags: ${{ env.IMAGE_NAME }}:1.0
           tags: |
             type=raw,value=${{ secrets.BUILD_VERSION }}
             type=ref,event=branch
