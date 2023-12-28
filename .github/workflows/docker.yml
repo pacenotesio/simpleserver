@@ -34,12 +34,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
+      - name: Generate build number
+        id: buildnumber
+        uses: einaregilsson/build-number@v3 
+        with:
+          token: ${{secrets.github_token}} 
+        
       - name: Prepare Build Arg
         id: prepare_build_arg
         run: |
           CURRENT_TAG=${GITHUB_REF#refs/tags/}
           echo ::set-output name=CURRENT_TAG::${CURRENT_TAG}
-          echo ::set-output name=ARCHITECTURE_VERSION::${CURRENT_TAG%-*}
+          echo ::set-output name=CURRENT_VERSION::${CURRENT_TAG%-*}
           echo ::set-output name=BUILD_NO::${CURRENT_TAG##*-}
 
       - name: Log in to Docker Hub
@@ -52,13 +58,14 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: pacenotesio/simpleserver:${{ steps.prepare_build_arg.outputs.CURRENT_TAG }}
+          tags: pacenotesio/simpleserver:${{ steps.prepare_build_arg.outputs.CURRENT_VERSION }}/${{ steps.buildnumber.outputs.build_number }}
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.clone_url }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           build-args: |
-            ARCHITECTURE_VERSION=${{ steps.prepare_build_arg.outputs.ARCHITECTURE_VERSION }}
+            CURRENT_TAG=${{ steps.prepare_build_arg.outputs.CURRENT_TAG }}
+            CURRENT_VERSION=${{ steps.prepare_build_arg.outputs.CURRENT_VERSION }}
             BUILD_NO=${{ steps.prepare_build_arg.outputs.BUILD_NO }}
 
 #      - name: Login to GitHub Container Registry
