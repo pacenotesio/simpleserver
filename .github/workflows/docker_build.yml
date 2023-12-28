@@ -36,7 +36,7 @@ jobs:
 #          tags: ${{ env.IMAGE_NAME }}:1.0
           tags: |
             type=raw,value=${{ secrets.BUILD_VERSION }}
-            type=raw,value=latest
+            type=raw,value="latest"
             type=ref,event=branch
 #            type=sha
 #            type=schedule,pattern={{date 'YYYYMMDD-hhmmss'}}
