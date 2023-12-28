@@ -34,10 +34,10 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
 #          tags: ${{ env.IMAGE_NAME }}:1.0
-#          tags: |
-#            type=ref,event=branch
-#            type=semver,pattern={{version}}
-#            type=sha
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
           labels: |
             org.opencontainers.image.title=simple-server
             org.opencontainers.image.vendor="Synon,Inc."
