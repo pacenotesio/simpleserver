@@ -10,4 +10,6 @@ RUN git clone --single-branch -b develop https://github.com/pacenotesio/simplese
 #COPY . .
 RUN go build -v -o /usr/local/bin/app ./server.go
 
+#COPY ./html /usr/local/apache2/htdocs/
+
 CMD ["app"]
