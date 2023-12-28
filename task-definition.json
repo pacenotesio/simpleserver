@@ -12,6 +12,11 @@
             "protocol": "tcp"
           },
           {
+            "containerPort": 443,
+            "hostPort": 443,
+            "protocol": "tcp"
+          },
+          {
             "containerPort": 8090,
             "hostPort": 8090,
             "protocol": "tcp"
