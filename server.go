@@ -21,8 +21,8 @@ func headers(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 
-    http.HandleFunc("/hello", hello)
-    http.HandleFunc("/headers", headers)
+    http.HandleFunc("/app/hello", hello)
+    http.HandleFunc("/app/headers", headers)
 
     http.ListenAndServe(":8090", nil)
 }

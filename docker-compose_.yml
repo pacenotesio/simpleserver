@@ -1,0 +1,167 @@
+version: "3"
+services:
+
+    syncsync-db:
+        image: mysql:8.0.31
+        container_name: ${SYNCSYNC_DB_CONTAINER}
+#        hostname: syncsync-db
+        ports:
+            - 3306:3306
+        command:
+            - --default_authentication_plugin=mysql_native_password
+            - --gtid_mode=ON
+            - --enforce_gtid_consistency=ON
+            - --relay-log=relay-bin
+            - --server_id=1
+        environment: &environment
+            TZ: Asia/Tokyo
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+            MYSQL_HOST: ${SYNCSYNC_MYSQL}
+            MYSQL_PORT: 3306
+            MYSQL_USER: syncsync
+            MYSQL_PASSWORD: syncsync@1234
+            MYSQL_DATABASE: syncsync
+#            MYSQL_ROOT_PASSWORD: handbookx@1234
+        volumes:
+            - syncsync-db-data:/var/lib/mysql
+            - syncsync-db-conf:/etc/mysql/conf.d
+            - syncsync-db-log:/var/log/mysql
+            - ./mysql/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+        networks:
+            syncsync_network:
+                ipv4_address: ${SYNCSYNC_MYSQL}
+        restart: unless-stopped
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: ${SYNCSYNC_DB_PHPMYADMIN}
+        platform: linux/amd64
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=syncsync-db
+            - PMA_USER=root
+#            - PMA_PASSWORD=syncsync@1234
+            - MEMORY_LIMIT=128M
+            - UPLOAD_LIMIT=64M
+        ports:
+            - 8082:80            
+        depends_on:
+            - syncsync-db
+        networks:
+            syncsync_network:
+                ipv4_address: ${SYNCSYNC_PHPMYADMIN}
+        restart: unless-stopped
+
+    syncsync-redis:
+        image: redis:latest
+        container_name: ${SYNCSYNC_REDIS_CONTAINER}
+        logging: 
+            driver : "json-file"
+            options:
+                    max-size: "100m"
+                    max-file: "3"
+        networks:
+            syncsync_network:
+                ipv4_address: ${SYNCSYNC_REDIS}
+        ports:
+            - "6379:6379"
+        volumes:
+            - syncsync-redis:/data
+        command: "redis-server --appendonly yes"
+        restart: unless-stopped
+        
+    syncsync-front:
+        image: nginx:latest
+        container_name:  ${SYNCSYNC_FRONT_CONTAINER}
+        logging:
+            driver : "json-file"
+            options:
+                    max-size: "100m"
+                    max-file: "3"
+        ports:
+            - 80:80
+            - 443:443
+        depends_on:
+            - syncsync-api
+        environment:
+            NGINX_HOST: 'cloud.syncsync.jp'
+            NGINX_PORT: '443'
+#            NGINX_CERT: 'wildcard.syncsync.jp.crt'
+#            NGINX_KEY: 'wildcard.syncsync.jp.key'
+        volumes:
+            - syncsync-cert:/etc/nginx/cert:ro
+#            - /Users/synon/Data/git3/simpleserver/syncsync/templates/default.ssl.conf.template:/etc/nginx/templates/default.ssl.conf.template:ro
+            - syncsync-templates:/etc/nginx/templates:ro
+            - syncsync-doc:/var/www/vhosts/cloud.syncsync.jp:ro
+        networks:
+            syncsync_network:
+                ipv4_address: ${SYNCSYNC_FRONT}
+        restart: unless-stopped
+
+    syncsync-api:
+        image: ${SYNCSYNC_IMAGE}
+        container_name: ${SYNCSYNC_CONTAINER}
+#        environment:
+        ports:
+            - 8090:8090
+            - 8080:8080
+        depends_on:
+            - syncsync-db
+        volumes:
+            - syncsync-data:/usr/src/
+        networks:
+            syncsync_network:
+                ipv4_address: ${SYNCSYNC_API}
+        restart: unless-stopped
+
+volumes:
+    syncsync-db-data:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_PATH}
+            o: bind
+    syncsync-db-conf:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_CONF_PATH}
+            o: bind
+    syncsync-db-log:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_LOG_PATH}
+            o: bind
+    syncsync-db:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_PATH}
+            o: bind
+    syncsync-redis:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_REDIS_PATH}
+            o: bind
+    syncsync-cert:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_CERT_PATH}
+            o: bind
+    syncsync-doc:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_FRONT_PATH}
+            o: bind
+    syncsync-templates:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_TEMPLATE_PATH}
+            o: bind
+    syncsync-data:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DATA_PATH}
+            o: bind
+
+networks:
+    syncsync_network:
+        external: true
+

@@ -1,0 +1,73 @@
+version: "3"
+services:
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: ${SYNCSYNC_DB_PHPMYADMIN}
+        platform: linux/amd64
+        environment:
+            - PMA_ARBITRARY=1
+#            - PMA_HOST=localhost
+#            - PMA_USER=openapi
+#            - PMA_PASSWORD=openapi
+#            - PMA_DATABASE=openapi
+            - MEMORY_LIMIT=128M
+            - UPLOAD_LIMIT=64M
+        ports:
+            - 8082:80            
+        networks:
+            syncsync_network:
+                ipv4_address: ${SYNCSYNC_PHPMYADMIN}
+        restart: unless-stopped
+
+volumes:
+    syncsync-db-data:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_PATH}
+            o: bind
+    syncsync-db-conf:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_CONF_PATH}
+            o: bind
+    syncsync-db-log:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_LOG_PATH}
+            o: bind
+    syncsync-db:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DB_PATH}
+            o: bind
+    syncsync-redis:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_REDIS_PATH}
+            o: bind
+    syncsync-cert:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_CERT_PATH}
+            o: bind
+    syncsync-doc:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_FRONT_PATH}
+            o: bind
+    syncsync-templates:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_TEMPLATE_PATH}
+            o: bind
+    syncsync-data:
+        driver_opts:
+            type: none
+            device: ${SYNCSYNC_DATA_PATH}
+            o: bind
+
+networks:
+    syncsync_network:
+        external: true
+
